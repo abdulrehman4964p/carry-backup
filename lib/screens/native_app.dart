@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() { busy = true; error = null; });
     try {
       final data = await NativeApi(null).request('/login', method: 'POST', body: {'username': user.text.trim(), 'password': pass.text});
-      await widget.onSignedIn(data['token'].toString());
+      widget.onSignedIn(data['token'].toString());
     } catch (e) { if (mounted) setState(() => error = e is ApiException ? e.message : 'Connection error. Dobara koshish karein.'); }
     if (mounted) setState(() => busy = false);
   }
@@ -128,7 +128,7 @@ class DashboardScreen extends StatelessWidget {
       Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: const LinearGradient(colors: [_navy, Color(0xFF123A67)]), borderRadius: BorderRadius.circular(20)), child: Row(children: [CircleAvatar(radius: 31, backgroundImage: NetworkImage(me['avatar'] ?? '')), const SizedBox(width: 14), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('WELCOME BACK', style: TextStyle(color: _gold, fontSize: 11, fontWeight: FontWeight.w800)), Text(me['name'] ?? 'Student', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)), Text(me['email'] ?? '', style: const TextStyle(color: Colors.white70, fontSize: 12))]))])),
       const SizedBox(height: 16), Row(children: [Expanded(child: _Stat(label: 'Overall Progress', value: '$progress%', icon: Icons.speed_rounded)), const SizedBox(width: 12), Expanded(child: _Stat(label: 'Active Access', value: '$active', icon: Icons.workspace_premium_rounded))]),
       const SizedBox(height: 22), const Text('Continue Learning', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: _navy)), const SizedBox(height: 10),
-      ...courses.take(3).map((c) => Card(child: ListTile(onTap: c['locked'] == true ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => CourseDetailScreen(api: api, courseId: c['id']))), leading: const CircleAvatar(backgroundColor: Color(0x22D4AF37), child: Icon(Icons.play_lesson_rounded, color: _navy)), title: Text(c['title'], style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: LinearProgressIndicator(value: ((c['progress']['percent'] as num).toDouble()) / 100, color: _gold), trailing: Icon(c['locked'] == true ? Icons.lock : Icons.chevron_right))),
+      ...courses.take(3).map((c) => Card(child: ListTile(onTap: c['locked'] == true ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => CourseDetailScreen(api: api, courseId: c['id']))), leading: const CircleAvatar(backgroundColor: Color(0x22D4AF37), child: Icon(Icons.play_lesson_rounded, color: _navy)), title: Text(c['title'], style: const TextStyle(fontWeight: FontWeight.w800)), subtitle: LinearProgressIndicator(value: ((c['progress']['percent'] as num).toDouble()) / 100, color: _gold), trailing: Icon(c['locked'] == true ? Icons.lock : Icons.chevron_right)))),
       const SizedBox(height: 8), OutlinedButton.icon(onPressed: openCourses, icon: const Icon(Icons.school), label: const Text('View All Courses')),
     ]));
   });
@@ -137,7 +137,42 @@ class DashboardScreen extends StatelessWidget {
 class _Stat extends StatelessWidget { const _Stat({required this.label, required this.value, required this.icon}); final String label,value; final IconData icon; @override Widget build(BuildContext context) => Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)]), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon, color: _gold), const SizedBox(height: 8), Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: _navy)), Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54))])); }
 
 class CoursesScreen extends StatefulWidget { const CoursesScreen({super.key, required this.api}); final NativeApi api; @override State<CoursesScreen> createState()=>_CoursesScreenState(); }
-class _CoursesScreenState extends State<CoursesScreen> { late Future<dynamic> future; @override void initState(){super.initState();future=widget.api.request('/courses');} void reload()=>setState(()=>future=widget.api.request('/courses')); @override Widget build(BuildContext context)=>FutureBuilder(future: future,builder:(context,snap){if(snap.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());if(snap.hasError)return _Retry(message:snap.error.toString(),onRetry:reload);final courses=snap.data['courses'] as List;return RefreshIndicator(onRefresh:()async=>reload(),child:ListView(padding:const EdgeInsets.all(16),children:[const Text('My Courses',style:TextStyle(fontSize:26,fontWeight:FontWeight.w900,color:_navy)),const Text('Apni access aur learning progress yahan manage karein.'),const SizedBox(height:14),...courses.map((c)=>Card(clipBehavior:Clip.antiAlias,child:InkWell(onTap:c['locked']==true?null:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>CourseDetailScreen(api:widget.api,courseId:c['id']))),child:Padding(padding:const EdgeInsets.all(16),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Expanded(child:Text(c['title'],style:const TextStyle(fontSize:18,fontWeight:FontWeight.w900))),Icon(c['locked']==true?Icons.lock_rounded:Icons.play_circle_fill_rounded,color:c['locked']==true?Colors.grey:_gold)]),const SizedBox(height:8),Text(c['description']??'',maxLines:2,overflow:TextOverflow.ellipsis),const SizedBox(height:12),LinearProgressIndicator(value:((c['progress']['percent'] as num).toDouble())/100,color:_gold),const SizedBox(height:5),Text(c['locked']==true?'Membership required':'${c['progress']['completed']} of ${c['progress']['total']} completed',style:const TextStyle(fontSize:12,fontWeight:FontWeight.w700))]))))]));}); }
+class _CoursesScreenState extends State<CoursesScreen> {
+  late Future<dynamic> future;
+  @override void initState() { super.initState(); future = widget.api.request('/courses'); }
+  void reload() => setState(() => future = widget.api.request('/courses'));
+  @override Widget build(BuildContext context) => FutureBuilder(
+    future: future,
+    builder: (context, snap) {
+      if (snap.connectionState != ConnectionState.done) return const Center(child: CircularProgressIndicator());
+      if (snap.hasError) return _Retry(message: snap.error.toString(), onRetry: reload);
+      final courses = snap.data['courses'] as List;
+      return RefreshIndicator(
+        onRefresh: () async => reload(),
+        child: ListView(padding: const EdgeInsets.all(16), children: [
+          const Text('My Courses', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: _navy)),
+          const Text('Apni access aur learning progress yahan manage karein.'),
+          const SizedBox(height: 14),
+          ...courses.map((c) => Card(
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: c['locked'] == true ? null : () => Navigator.push(context, MaterialPageRoute(builder: (_) => CourseDetailScreen(api: widget.api, courseId: c['id']))),
+              child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [Expanded(child: Text(c['title'], style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900))), Icon(c['locked'] == true ? Icons.lock_rounded : Icons.play_circle_fill_rounded, color: c['locked'] == true ? Colors.grey : _gold)]),
+                const SizedBox(height: 8),
+                Text(c['description'] ?? '', maxLines: 2, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 12),
+                LinearProgressIndicator(value: ((c['progress']['percent'] as num).toDouble()) / 100, color: _gold),
+                const SizedBox(height: 5),
+                Text(c['locked'] == true ? 'Membership required' : '${c['progress']['completed']} of ${c['progress']['total']} completed', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+              ])),
+            ),
+          )),
+        ]),
+      );
+    },
+  );
+}
 
 class CourseDetailScreen extends StatefulWidget { const CourseDetailScreen({super.key,required this.api,required this.courseId});final NativeApi api;final int courseId;@override State<CourseDetailScreen> createState()=>_CourseDetailScreenState(); }
 class _CourseDetailScreenState extends State<CourseDetailScreen>{late Future<dynamic> future;@override void initState(){super.initState();future=widget.api.request('/courses/${widget.courseId}');}void reload()=>setState(()=>future=widget.api.request('/courses/${widget.courseId}'));@override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:const Text('Course Lessons')),body:FutureBuilder(future:future,builder:(context,snap){if(snap.connectionState!=ConnectionState.done)return const Center(child:CircularProgressIndicator());if(snap.hasError)return _Retry(message:snap.error.toString(),onRetry:reload);final c=snap.data as Map<String,dynamic>,lessons=c['lessons'] as List;return ListView(padding:const EdgeInsets.all(16),children:[Container(padding:const EdgeInsets.all(18),decoration:BoxDecoration(color:_navy,borderRadius:BorderRadius.circular(18)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('FOREXLANCER LEARNING',style:TextStyle(color:_gold,fontSize:11,fontWeight:FontWeight.w800)),Text(c['title'],style:const TextStyle(color:Colors.white,fontSize:23,fontWeight:FontWeight.w900)),const SizedBox(height:10),LinearProgressIndicator(value:((c['progress']['percent'] as num).toDouble())/100,color:_gold),const SizedBox(height:5),Text('${c['progress']['percent']}% completed',style:const TextStyle(color:Colors.white70))])),const SizedBox(height:14),...lessons.map((l)=>Card(child:ListTile(onTap:l['unlocked']==true?()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>LessonScreen(api:widget.api,courseTitle:c['title'],lesson:Map<String,dynamic>.from(l)))).then((_){reload();}):null,leading:CircleAvatar(backgroundColor:l['completed']==true?Colors.green:_navy,child:Icon(l['completed']==true?Icons.check:Icons.play_arrow,color:Colors.white)),title:Text('Lecture #${l['number']}: ${l['title']}',style:const TextStyle(fontWeight:FontWeight.w800)),subtitle:Text(l['unlocked']==true?(l['completed']==true?'Completed':'Ready to watch'):'Locked'),trailing:Icon(l['unlocked']==true?Icons.chevron_right:Icons.lock))))]);}));}
