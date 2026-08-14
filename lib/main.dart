@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'core/app_config.dart';
-import 'screens/browser_screen.dart';
+import 'screens/native_app.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,8 +34,7 @@ class ForexlancerApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Roboto',
       ),
-      home: const BrowserScreen(),
+      home: const NativeGate(),
     );
   }
 }
-

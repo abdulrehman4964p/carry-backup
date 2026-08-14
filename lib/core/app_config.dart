@@ -1,6 +1,7 @@
 class AppConfig {
   static const appName = 'Forexlancer';
   static const baseUrl = 'https://forexlancer.com';
+  static const apiUrl = '$baseUrl/wp-json/forexlancer/v1';
   static const homeUrl = '$baseUrl/';
   static const loginUrl = '$baseUrl/login/';
   static const signUpUrl = '$baseUrl/sign-up/';
