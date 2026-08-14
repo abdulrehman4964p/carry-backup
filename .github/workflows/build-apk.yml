@@ -34,6 +34,7 @@ jobs:
         run: |
           flutter create --platforms=android --org com.forexlancer --project-name forexlancer_mobile .
           rm -f test/widget_test.dart
+          sed -i '/<manifest/a\    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />' android/app/src/main/AndroidManifest.xml
 
       - name: Install packages
         run: flutter pub get
