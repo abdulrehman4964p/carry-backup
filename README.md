@@ -1,5 +1,7 @@
 # Forexlancer Mobile
 
+![Android APK Build](https://github.com/abdulrehman4964p/carry-backup/actions/workflows/build-apk.yml/badge.svg)
+
 Cross-platform Flutter app for Android and iOS. This release is mapped to Forexlancer Core 8.25.1 and Elite Theme 6.7.8. It uses a secure, allow-listed WebView so existing WordPress login sessions, courses, payments, certificates, profile, affiliate and dashboard features remain available without duplicating business logic.
 
 The native drawer exposes all verified WordPress routes: Student Dashboard, Learning Center, My Courses, Free/Basic/Advance courses, Memberships, Premium Signals, Payment History, Certificates, Affiliate Program, Notifications, Support, Profile, Trading Chart, Technical Analysis, Fundamental Analysis and Forex News.
