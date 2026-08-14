@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import '../core/app_config.dart';
 
@@ -76,6 +77,12 @@ class _BrowserScreenState extends State<BrowserScreen> {
       ))
       ..loadRequest(Uri.parse(AppConfig.homeUrl));
 
+    final platformController = _web.platform;
+    if (platformController is AndroidWebViewController) {
+      platformController.setMediaPlaybackRequiresUserGesture(false);
+      platformController.setMixedContentMode(MixedContentMode.alwaysAllow);
+    }
+
     _networkSubscription = Connectivity().onConnectivityChanged.listen((result) {
       final offline = result.every((item) => item == ConnectivityResult.none);
       if (mounted) setState(() => _offline = offline);
@@ -102,16 +109,56 @@ class _BrowserScreenState extends State<BrowserScreen> {
     await _web.runJavaScript('''
       (function () {
         var id = 'forexlancer-native-app-css';
-        if (document.getElementById(id)) return;
-        var style = document.createElement('style');
-        style.id = id;
-        style.textContent = `
-          html, body { max-width: 100%; overflow-x: hidden; }
-          img, video, iframe, table { max-width: 100% !important; }
-          input, select, textarea, button { font-size: 16px !important; }
-          .forexlancer-app-hide, .mobile-app-hide { display:none !important; }
-        `;
-        document.head.appendChild(style);
+        if (!document.getElementById(id)) {
+          var style = document.createElement('style');
+          style.id = id;
+          style.textContent = `
+            html, body { max-width: 100%; overflow-x: hidden; }
+            img, video, iframe, table { max-width: 100% !important; }
+            input, select, textarea, button { font-size: 16px !important; }
+            .forexlancer-app-hide, .mobile-app-hide { display:none !important; }
+            .flx-video-wrap iframe, .flx-external-player iframe,
+            .flx-video-wrap video { pointer-events: auto !important; touch-action: manipulation; }
+          `;
+          document.head.appendChild(style);
+        }
+
+        function repairCoursePlayers() {
+          document.querySelectorAll('iframe').forEach(function (frame) {
+            var raw = frame.getAttribute('src') || '';
+            if (!/(youtube(?:-nocookie)?\.com|youtu\.be)/i.test(raw)) return;
+
+            frame.setAttribute('allow',
+              'autoplay; encrypted-media; picture-in-picture; fullscreen');
+            frame.setAttribute('allowfullscreen', '');
+            frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+
+            if (frame.dataset.forexlancerAppFixed === '1') return;
+            frame.dataset.forexlancerAppFixed = '1';
+            try {
+              var url = new URL(raw, window.location.href);
+              url.searchParams.set('playsinline', '1');
+              url.searchParams.set('origin', 'https://forexlancer.com');
+              if (url.href !== frame.src) frame.src = url.href;
+            } catch (_) {}
+          });
+
+          document.querySelectorAll('.flx-video-wrap video, .flx-external-player video')
+            .forEach(function (video) {
+              video.setAttribute('playsinline', '');
+              video.setAttribute('webkit-playsinline', '');
+              video.setAttribute('controls', '');
+            });
+        }
+
+        repairCoursePlayers();
+        if (!window.__forexlancerPlayerObserver) {
+          window.__forexlancerPlayerObserver = new MutationObserver(repairCoursePlayers);
+          window.__forexlancerPlayerObserver.observe(document.documentElement, {
+            childList: true,
+            subtree: true
+          });
+        }
       })();
     ''');
   }
