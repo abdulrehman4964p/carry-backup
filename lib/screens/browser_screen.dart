@@ -61,7 +61,6 @@ class _BrowserScreenState extends State<BrowserScreen> {
     _web = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFFF5F7FA))
-      ..setUserAgent('ForexlancerMobile/1.0 Android-iOS')
       ..setNavigationDelegate(NavigationDelegate(
         onProgress: (value) => mounted ? setState(() => _progress = value) : null,
         onPageStarted: (_) {
